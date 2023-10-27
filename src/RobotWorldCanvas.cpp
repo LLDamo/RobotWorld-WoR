@@ -452,6 +452,27 @@ namespace View
 	/**
 	 *
 	 */
+	void RobotWorldCanvas::populateFirstWorld( int aNumberOfWalls /*= 2*/)
+	{
+		Model::RobotWorld::getRobotWorld().populateFirstWorld(aNumberOfWalls);
+	}
+	/**
+	 *
+	 */
+	void RobotWorldCanvas::populateSecondWorld( int aNumberOfWalls /*= 2*/)
+	{
+		Model::RobotWorld::getRobotWorld().populateSecondWorld(aNumberOfWalls);
+	}
+	/**
+	 *
+	 */
+	void RobotWorldCanvas::populateThirdWorld( int aNumberOfWalls /*= 2*/)
+	{
+		Model::RobotWorld::getRobotWorld().populateThirdWorld(aNumberOfWalls);
+	}
+	/**
+	 *
+	 */
 	void RobotWorldCanvas::unpopulate()
 	{
 		shapes.clear();

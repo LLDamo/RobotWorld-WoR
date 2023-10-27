@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MainApplication.hpp"
 #include "Notifier.hpp"
+#include "Particle.hpp"
 #include "Robot.hpp"
 #include "RobotWorld.hpp"
 #include "RobotWorldCanvas.hpp"
@@ -90,9 +91,24 @@ namespace View
 
 		drawPath( dc);
 
+		if(Application::MainApplication::getSettings().getDrawParticleFilter())
+		{
+			drawLidar( dc);
+		}
+
 		drawRobot( dc);
 
-		drawLaser( dc);
+//		drawLaser( dc);
+
+		if(Application::MainApplication::getSettings().getDrawParticleFilter())
+		{
+			drawParticles( dc);
+		}
+
+		if(Application::MainApplication::getSettings().getDrawKalmanFilter())
+		{
+			kalmanSteps( dc);
+		}
 	}
 	/**
 	 *
@@ -257,7 +273,51 @@ namespace View
 			{
 				dc.SetPen( wxPen(  "RED", borderWidth, wxPENSTYLE_SOLID));
 				dc.DrawCircle( d.point, 1);
+
 			}
+		}
+	}
+	/**
+	 *
+	 */
+	void RobotShape::drawLidar( wxDC& dc)
+	{
+
+		for (const Model::DistancePercept &d : getRobot()->currentLidarPointCloud)
+		{
+			if (d.point.x != Model::noObject && d.point.y != Model::noObject)
+			{
+				// Draw the lidar beam
+				dc.SetPen( wxPen(  "YELLOW", 1, wxPENSTYLE_SOLID));
+				dc.DrawLine( centre.x, centre.y, d.point.x, d.point.y);
+
+				dc.SetPen( wxPen(  "RED", borderWidth, wxPENSTYLE_SOLID));
+				dc.DrawCircle( d.point, 1);
+			}
+		}
+	}
+	/**
+	 *
+	 */
+	void RobotShape::drawParticles( wxDC& dc)
+	{
+
+		for (const Model::Particle& p : getRobot()->particles)
+		{
+			dc.SetPen( wxPen(  "GREEN", borderWidth, wxPENSTYLE_SOLID));
+			dc.DrawCircle( p.getPosition(), 1);
+		}
+	}
+	/**
+	 *
+	 */
+	void RobotShape::kalmanSteps( wxDC& dc)
+	{
+
+		for (const wxPoint& p : getRobot()->kalmanSteps)
+		{
+			dc.SetPen( wxPen(  "BLUE", borderWidth, wxPENSTYLE_SOLID));
+			dc.DrawCircle( p, 1);
 		}
 	}
 } // namespace View

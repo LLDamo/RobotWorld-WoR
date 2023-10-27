@@ -1,17 +1,20 @@
-#ifndef LASERDISTANCESENSOR_HPP_
-#define LASERDISTANCESENSOR_HPP_
+/*
+ * Compas.hpp
+ *
+ *  Created on: Oct 23, 2023
+ *      Author: Damo
+ */
+
+#ifndef COMPAS_HPP_
+#define COMPAS_HPP_
 
 #include "Config.hpp"
 
 #include "AbstractSensor.hpp"
-#include "DistancePercept.hpp"
+#include "AnglePercept.hpp"
 
 namespace Model
 {
-	/**
-	 * Compile time configurable length of the laser beam
-	 */
-	const short int laserBeamLength = 2048;
 
 	class Robot;
 	typedef std::shared_ptr<Robot> RobotPtr;
@@ -19,13 +22,13 @@ namespace Model
 	/**
 	 *
 	 */
-	class LaserDistanceSensor : public AbstractSensor
+	class Compas : public AbstractSensor
 	{
 		public:
 			/**
 			 *
 			 */
-			explicit LaserDistanceSensor( Robot& aRobot);
+			explicit Compas( Robot& aRobot);
 			/**
 			 *
 			 */
@@ -37,7 +40,7 @@ namespace Model
 			/**
 			 *
 			 */
-			static void setStdDev(double aStdDev) {LaserDistanceSensor::stddev = aStdDev;}
+			static void setStdDev(double aStdDev) {Compas::stddev = aStdDev;}
 			/**
 			 *
 			 */
@@ -63,4 +66,5 @@ namespace Model
 			static double stddev;
 	};
 } // namespace Model
-#endif /* LASERDISTANCESENSOR_HPP_ */
+
+#endif /* COMPAS_HPP_ */

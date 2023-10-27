@@ -7,9 +7,12 @@
 #include "AStar.hpp"
 #include "BoundedVector.hpp"
 #include "DistancePercepts.hpp"
+#include "Matrix.hpp"
 #include "Message.hpp"
 #include "MessageHandler.hpp"
 #include "Observer.hpp"
+#include "Odometer.hpp"
+#include "Particle.hpp"
 #include "Point.hpp"
 #include "Region.hpp"
 #include "Size.hpp"
@@ -34,6 +37,11 @@ namespace Model
 
 	class Goal;
 	typedef std::shared_ptr< Goal > GoalPtr;
+
+	class Particle;
+	typedef std::shared_ptr< Particle > ParticlePtr;
+
+	const short int particleSampleSize = 1000;
 
 	/**
 	 *
@@ -254,6 +262,15 @@ namespace Model
 
 			// Radar
 			PointCloud currentRadarPointCloud; // The latest radar point cloud
+
+			//Lidar
+			PointCloud currentLidarPointCloud; // The latest lidar point cloud
+
+			//Particles
+			std::vector<Particle> particles;
+
+			// Kalman
+			std::vector<wxPoint> kalmanSteps;
 			//@}
 
 		protected:
@@ -273,6 +290,15 @@ namespace Model
 			 *
 			 */
 			bool collision();
+			/**
+			 *
+			 */
+			void resampleParticles(const PointCloud& pointCloudRobot, const wxPoint& step);
+			/**
+			 *
+			 */
+			void updateKalmanBelief(Matrix< double, 2, 1 >& stateVector, Matrix< double, 2, 2 >&  covariantieMatrix, const wxPoint& step, double angle);
+
 		private:
 			/**
 			 *
@@ -330,6 +356,11 @@ namespace Model
 			 *
 			 */
 			Messaging::ServerPtr server;
+			/**
+			 *
+			 */
+			Odometer odometer;
+
 	};
 } // namespace Model
 #endif // ROBOT_HPP_

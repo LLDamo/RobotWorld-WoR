@@ -1,12 +1,15 @@
 #include "Robot.hpp"
 
 #include "Client.hpp"
+#include "Compas.hpp"
 #include "CommunicationService.hpp"
 #include "Goal.hpp"
 #include "LaserDistanceSensor.hpp"
+#include "Lidar.hpp"
 #include "Logger.hpp"
 #include "MainApplication.hpp"
 #include "MathUtils.hpp"
+#include "Matrix.hpp"
 #include "Message.hpp"
 #include "MessageTypes.hpp"
 #include "RobotWorld.hpp"
@@ -19,6 +22,7 @@
 #include <ctime>
 #include <sstream>
 #include <thread>
+#include <random>
 
 namespace Model
 {
@@ -46,10 +50,27 @@ namespace Model
 								speed( 0.0),
 								acting(false),
 								driving(false),
-								communicating(false)
+								communicating(false),
+								odometer(aPosition)
 	{
-		std::shared_ptr< AbstractSensor > laserSensor = std::make_shared<LaserDistanceSensor>( *this);
-		attachSensor( laserSensor);
+//		std::shared_ptr< AbstractSensor > laserSensor = std::make_shared<LaserDistanceSensor>( *this);
+//		attachSensor( laserSensor);
+
+		std::shared_ptr< AbstractSensor > lidar = std::make_shared<Lidar>( *this);
+		attachSensor( lidar);
+
+		std::shared_ptr< AbstractSensor > compas = std::make_shared<Compas>( *this);
+		attachSensor( compas);
+
+//		this->odometer(position);
+
+		std::random_device rd{};
+		std::mt19937 gen{rd()};
+		std::uniform_int_distribution<> point{0, 1023};
+		for(std::size_t i = 0; i < particleSampleSize; ++i)
+		{
+			particles.push_back( Particle( wxPoint( point(gen), point(gen) ) ) );
+		}
 
 		// We use the real position for starters, not an estimated position.
 		startPosition = position;
@@ -431,7 +452,7 @@ namespace Model
 		{
 			for (std::shared_ptr< AbstractSensor > sensor : sensors)
 			{
-				sensor->setOn();
+				sensor->setOn(30);
 			}
 		
 			// The runtime value always wins!!
@@ -446,15 +467,29 @@ namespace Model
 			// We use the real position for starters, not an estimated position.
 			startPosition = position;
 
+			odometer.setPrevPosition(startPosition);
+
+			Matrix< double, 2, 1 > stateVector {{{(double)position.x}}, {{(double)position.y}}};
+			Matrix< double, 2, 2 > covariantieMatrix {
+					{1.0, 0.0},
+					{0.0, 1.0}};
+			kalmanSteps.push_back(position);
+
 			unsigned pathPoint = 0;
-			while (position.x > 0 && position.x < 500 && position.y > 0 && position.y < 500 && pathPoint < path.size()) // @suppress("Avoid magic numbers")
+			while (position.x > 0 && position.x < 1024 && position.y > 0 && position.y < 1024 && pathPoint < path.size()) // @suppress("Avoid magic numbers")
 			{
 				// Do the update
 				const PathAlgorithm::Vertex& vertex = path[pathPoint+=static_cast<unsigned int>(speed)];
+				double angleUpdate = Utils::Shape2DUtils::getAngle( BoundedVector( vertex.asPoint(), position)) - Utils::Shape2DUtils::getAngle( front);
 				front = BoundedVector( vertex.asPoint(), position);
+				wxPoint stepVector(vertex.x - position.x, vertex.y - position.y);
 				position.x = vertex.x;
 				position.y = vertex.y;
 
+//				notifyObservers();
+
+				bool paticlesSampeled = false;
+				bool kalmand = false;
 				// Do the measurements / handle all percepts
 				// TODO There are race conditions here:
 				//			1. size() is not atomic
@@ -472,7 +507,42 @@ namespace Model
 						{
 							DistancePercept* distancePercept = dynamic_cast<DistancePercept*>(percept.value().get());
 							currentRadarPointCloud.push_back(*distancePercept);
-						}else
+						}
+						else if (typeid(tempAbstractPercept) == typeid(DistancePercepts))
+						{
+							if(Application::MainApplication::getSettings().getDrawParticleFilter())
+							{
+								if(!paticlesSampeled)
+								{
+									DistancePercepts* distancePercepts = dynamic_cast<DistancePercepts*>(percept.value().get());
+									currentLidarPointCloud.clear();
+
+									for(std::size_t i = 0; i < distancePercepts->pointCloud.size(); ++i)
+									{
+										currentLidarPointCloud.push_back(distancePercepts->pointCloud.at(i));
+									}
+
+									resampleParticles(distancePercepts->pointCloud, stepVector);
+
+									paticlesSampeled = true;
+								}
+							}
+						}
+						else if (typeid(tempAbstractPercept) == typeid(AnglePercept))
+						{
+							if(Application::MainApplication::getSettings().getDrawKalmanFilter())
+							{
+								if(!kalmand)
+								{
+									AnglePercept* anglePercept = dynamic_cast<AnglePercept*>(percept.value().get());
+
+									updateKalmanBelief(stateVector, covariantieMatrix, stepVector, anglePercept->angle);
+
+									kalmand = true;
+								}
+							}
+						}
+						else
 						{
 							Application::Logger::log(std::string("Unknown type of percept:") + typeid(tempAbstractPercept).name());
 						}
@@ -494,7 +564,7 @@ namespace Model
 				notifyObservers();
 
 				// If there is no sleep_for here the robot will immediately be on its destination....
-				std::this_thread::sleep_for( std::chrono::milliseconds( 100)); // @suppress("Avoid magic numbers")
+				std::this_thread::sleep_for( std::chrono::milliseconds( 50)); // @suppress("Avoid magic numbers")
 
 				// this should be the last thing in the loop
 				if(driving == false)
@@ -583,6 +653,82 @@ namespace Model
 			}
 		}
 		return false;
+	}
+
+	void Robot::resampleParticles(const PointCloud& pointCloudRobot, const wxPoint& step)
+	{
+
+		std::vector<wxPoint> particlePositions;
+		std::vector<double> weights;
+		double maxWeight = 2048.0; //max beam length
+
+		particlePositions.reserve(particleSampleSize);
+		weights.reserve(particleSampleSize);
+		for(std::size_t i = 0; i < particleSampleSize; ++i)
+		{
+			particles.at(i).setPosition(particles.at(i).getPosition() + step);
+			particlePositions.push_back(particles.at(i).getPosition());
+			PointCloud pointCloudParticle;
+			particles.at(i).getPointCloud(pointCloudParticle);
+			double weight = 0.0;
+			for(std::size_t beam = 0; beam < pointCloudRobot.size(); ++beam)
+			{
+				if(pointCloudParticle.at(beam).point.x != Model::noObject && pointCloudParticle.at(beam).point.y != Model::noObject)
+				{
+					weight += Utils::Shape2DUtils::distance(pointCloudParticle.at(beam).point, pointCloudRobot.at(beam).point);
+				}
+				else
+				{
+					if(pointCloudRobot.at(beam).point.x != Model::noObject && pointCloudRobot.at(beam).point.y != Model::noObject)
+					{
+						weight += maxWeight;
+					}
+				}
+			}
+			weights.push_back( 400000.0 / weight);
+		}
+
+		particles.clear();
+
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::discrete_distribution<uint32_t> dist(std::begin(weights), std::end(weights));
+		std::normal_distribution<> noise{0,1}; //TEMP MAGIC NUMBER 10
+		for(std::size_t i = 0; i < particleSampleSize; ++i)
+		{
+			wxPoint chosenParticle(particlePositions.at(dist(gen)));
+			particles.push_back(Particle(wxPoint(chosenParticle.x + noise(gen), chosenParticle.y + noise(gen))));
+		}
+	}
+
+	void Robot::updateKalmanBelief(Matrix< double, 2, 1 >& stateVector, Matrix< double, 2, 2 >&  covariantieMatrix, const wxPoint& step, double angle)
+	{
+		Matrix< double, 2, 1 > prevStateVector(stateVector);
+
+		Matrix< double, 2, 2 > transitieMatrixA {
+				{1.0, 0.0},
+				{0.0, 1.0}};
+		Matrix< double, 2, 2 > transitieMatrixB {
+			{1.0, 0.0},
+			{0.0, 1.0}};
+		Matrix< double, 2, 2 > transitieMatrixC {{
+					{1.0, 0.0},
+					{0.0, 1.0}}};
+		Matrix< double, 2, 1 > updateVector {{{step.x}}, {{step.y}}};
+		Matrix< double, 2, 2 > Q {
+						{1.0, 0.0},
+						{0.0, 1.0}};
+
+		double oldOdometer = odometer.getDistance();
+		double newOdometer = odometer.getPerceptFor(position);
+		double deltaX = std::cos( angle)*(newOdometer - oldOdometer);
+		double deltaY = std::sin( angle)*(newOdometer - oldOdometer);
+
+		Matrix< double, 2, 1 > measurement {{{deltaX + stateVector.at(0).at(0)}}, {{deltaY + stateVector.at(1).at(0)}}};
+
+		MatrixUtils::kalmanFilter(stateVector, covariantieMatrix, transitieMatrixA, updateVector, transitieMatrixB, transitieMatrixC, Q, measurement);
+
+		kalmanSteps.push_back(wxPoint(stateVector.at(0).at(0), stateVector.at(1).at(0)));
 	}
 
 } // namespace Model

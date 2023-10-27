@@ -54,7 +54,12 @@ namespace Application
 																logDestination( nullptr),
 																configPanel(nullptr),
 																drawOpenSetCheckbox(nullptr),
+																drawParticleFilterCheckbox(nullptr),
+																drawKalmanFilterCheckbox(nullptr),
 																speedSpinCtrl(nullptr),
+																lidarStdDevSpinCtrl(nullptr),
+																compasStdDevSpinCtrl(nullptr),
+																odometerStdDevSpinCtrl(nullptr),
 																worldNumber(nullptr),
 																buttonPanel( nullptr)
 	{
@@ -183,7 +188,7 @@ namespace Application
 					wxGBPosition( 1, 1),
 					wxGBSpan( 1, 1),
 					wxSHRINK);
-		robotWorldCanvas->SetMinSize( wxSize( 500,500));
+		robotWorldCanvas->SetMinSize( wxSize( 1024,1024));
 
 		sizer->Add( 5, 5,
 					wxGBPosition( 2, 2),
@@ -356,16 +361,86 @@ namespace Application
 					wxGBSpan( 1, 1),
 					wxSHRINK | wxALIGN_CENTRE);
 
+		sizer->Add( drawParticleFilterCheckbox = Application::makeCheckbox( panel,
+																	 "Particle Filter",
+																	 [this]( wxCommandEvent& event){this-> OnDrawParticleFilter(event);}),
+					wxGBPosition( 3, 1),
+					wxGBSpan( 1, 1),
+					wxSHRINK | wxALIGN_CENTRE);
+
+		sizer->Add(new wxStaticText(panel,
+									wxID_ANY,
+									"Lidar stdDev"),
+				   wxGBPosition( 3, 2),
+				   wxGBSpan( 1, 1),
+				   wxSHRINK | wxALIGN_CENTER);
+		sizer->Add(lidarStdDevSpinCtrl = new wxSpinCtrl(panel,
+												  wxID_ANY),
+				   wxGBPosition( 3, 3),
+				   wxGBSpan( 1, 1),
+				   wxSHRINK | wxALIGN_CENTER);
+		lidarStdDevSpinCtrl->SetValue(static_cast<int>(10));
+		lidarStdDevSpinCtrl->Bind(wxEVT_COMMAND_SPINCTRL_UPDATED,[this](wxCommandEvent& event){this->OnLidarStdDevSpinCtrlUpdate(event);});
+
+		sizer->Add( drawKalmanFilterCheckbox = Application::makeCheckbox( panel,
+																	 "Kalman Filter",
+																	 [this]( wxCommandEvent& event){this-> OnDrawKalmanFilter(event);}),
+					wxGBPosition( 4, 1),
+					wxGBSpan( 1, 1),
+					wxSHRINK | wxALIGN_CENTRE);
+
+		sizer->Add(new wxStaticText(panel,
+									wxID_ANY,
+									"Compas stdDev"),
+				   wxGBPosition( 4, 2),
+				   wxGBSpan( 1, 1),
+				   wxSHRINK | wxALIGN_CENTER);
+		sizer->Add(compasStdDevSpinCtrl = new wxSpinCtrl(panel,
+												  wxID_ANY),
+				   wxGBPosition( 4, 3),
+				   wxGBSpan( 1, 1),
+				   wxSHRINK | wxALIGN_CENTER);
+		compasStdDevSpinCtrl->SetValue(static_cast<int>(2));
+		compasStdDevSpinCtrl->Bind(wxEVT_COMMAND_SPINCTRL_UPDATED,[this](wxCommandEvent& event){this->OnCompasStdDevSpinCtrlUpdate(event);});
+
+		sizer->Add(new wxStaticText(panel,
+									wxID_ANY,
+									"Odometer stdDev"),
+				   wxGBPosition( 5, 2),
+				   wxGBSpan( 1, 1),
+				   wxSHRINK | wxALIGN_CENTER);
+		sizer->Add(odometerStdDevSpinCtrl = new wxSpinCtrl(panel,
+												  wxID_ANY),
+				   wxGBPosition( 5, 3),
+				   wxGBSpan( 1, 1),
+				   wxSHRINK | wxALIGN_CENTER);
+		odometerStdDevSpinCtrl->SetValue(static_cast<int>(1));
+		odometerStdDevSpinCtrl->Bind(wxEVT_COMMAND_SPINCTRL_UPDATED,[this](wxCommandEvent& event){this->OnOdometerStdDevSpinCtrlUpdate(event);});
+
+		sizer->Add( makeButton( panel,
+								"Save",
+								[this](wxCommandEvent& anEvent){this->OnSaveConfiguration(anEvent);}),
+					wxGBPosition( 6, 3),
+					wxGBSpan( 1, 1),
+					wxGROW);
+
+		sizer->Add( makeButton( panel,
+								"Load",
+								[this](wxCommandEvent& anEvent){this->OnLoadConfiguration(anEvent);}),
+					wxGBPosition( 6, 2),
+					wxGBSpan( 1, 1),
+					wxGROW);
+
 		/////// Speed
 		sizer->Add(new wxStaticText(panel,
 									wxID_ANY,
 									"Speed"),
-				   wxGBPosition( 2, 1),
+				   wxGBPosition( 1, 2),
 				   wxGBSpan( 1, 1),
 				   wxSHRINK | wxALIGN_CENTER);
 		sizer->Add(speedSpinCtrl = new wxSpinCtrl(panel,
 												  wxID_ANY),
-				   wxGBPosition( 2, 2),
+				   wxGBPosition( 1, 3),
 				   wxGBSpan( 1, 1),
 				   wxSHRINK | wxALIGN_CENTER);
 		speedSpinCtrl->SetValue(static_cast<int>(10));
@@ -411,14 +486,14 @@ namespace Application
 												},
 												"World number",
 												wxRA_SPECIFY_ROWS),
-					wxGBPosition( 3, 1),
+					wxGBPosition( 2, 1),
 					wxGBSpan( 1, 1),
 					wxSHRINK | wxALIGN_CENTER);
 		sizer->AddGrowableRow( 3);
 		sizer->AddGrowableCol( 1);
 
 		sizer->Add( 5, 5,
-					wxGBPosition( 4, 3),
+					wxGBPosition( 7, 4),
 					wxGBSpan( 1, 1),
 					wxGROW);
 		sizer->AddGrowableCol( 3);
@@ -427,7 +502,12 @@ namespace Application
 
 		MainSettings& mainSettings = MainApplication::getSettings();
 		drawOpenSetCheckbox->SetValue(mainSettings.getDrawOpenSet());
+		drawParticleFilterCheckbox->SetValue(mainSettings.getDrawParticleFilter());
+		drawKalmanFilterCheckbox->SetValue(mainSettings.getDrawKalmanFilter());
 		speedSpinCtrl->SetValue(static_cast<int>(mainSettings.getSpeed()));
+		lidarStdDevSpinCtrl->SetValue(static_cast<int>(mainSettings.getLidarStdDev()));
+		compasStdDevSpinCtrl->SetValue(static_cast<int>(mainSettings.getCompasStdDev()));
+		odometerStdDevSpinCtrl->SetValue(static_cast<int>(mainSettings.getOdometerStdDev()));
 		worldNumber->SetSelection(static_cast<int>(mainSettings.getWorldNumber()));
 
 		if(MainApplication::isArgGiven("-debug_grid"))
@@ -591,6 +671,22 @@ namespace Application
 	/**
 	 *
 	 */
+	void MainFrameWindow::OnDrawParticleFilter( wxCommandEvent& UNUSEDPARAM(anEvent))
+	{
+		MainSettings& mainSettings = MainApplication::getSettings();
+		mainSettings.setDrawParticleFilter(drawParticleFilterCheckbox->IsChecked());
+	}
+	/**
+	 *
+	 */
+	void MainFrameWindow::OnDrawKalmanFilter( wxCommandEvent& UNUSEDPARAM(anEvent))
+	{
+		MainSettings& mainSettings = MainApplication::getSettings();
+		mainSettings.setDrawKalmanFilter(drawKalmanFilterCheckbox->IsChecked());
+	}
+	/**
+	 *
+	 */
 	void MainFrameWindow::OnSpeedSpinCtrlUpdate( wxCommandEvent& UNUSEDPARAM(anEvent))
 	{
 //		TRACE_DEVELOP(anEvent.GetString().ToStdString());
@@ -602,6 +698,49 @@ namespace Application
 
 		MainSettings& mainSettings = MainApplication::getSettings();
 		mainSettings.setSpeed(speedSpinCtrl->GetValue());
+	}
+	/**
+	 *
+	 */
+	void MainFrameWindow::OnLidarStdDevSpinCtrlUpdate( wxCommandEvent& UNUSEDPARAM(anEvent))
+	{
+		MainSettings& mainSettings = MainApplication::getSettings();
+		mainSettings.setLidarStdDev(lidarStdDevSpinCtrl->GetValue());
+	}
+	/**
+	 *
+	 */
+	void MainFrameWindow::OnCompasStdDevSpinCtrlUpdate( wxCommandEvent& UNUSEDPARAM(anEvent))
+	{
+		MainSettings& mainSettings = MainApplication::getSettings();
+		mainSettings.setCompasStdDev(compasStdDevSpinCtrl->GetValue());
+	}
+	/**
+	 *
+	 */
+	void MainFrameWindow::OnOdometerStdDevSpinCtrlUpdate( wxCommandEvent& UNUSEDPARAM(anEvent))
+	{
+		MainSettings& mainSettings = MainApplication::getSettings();
+		mainSettings.setOdometerStdDev(odometerStdDevSpinCtrl->GetValue());
+	}
+	/**
+	 *
+	 */
+	void MainFrameWindow::OnSaveConfiguration( wxCommandEvent& UNUSEDPARAM(anEvent))
+	{
+		MainSettings& mainSettings = MainApplication::getSettings();
+		mainSettings.saveConfiguration();
+	}
+	/**
+	 *
+	 */
+	void MainFrameWindow::OnLoadConfiguration( wxCommandEvent& UNUSEDPARAM(anEvent))
+	{
+		MainSettings& mainSettings = MainApplication::getSettings();
+		mainSettings.loadConfiguration();
+		lidarStdDevSpinCtrl->SetValue(static_cast<int>(mainSettings.getLidarStdDev()));
+		compasStdDevSpinCtrl->SetValue(static_cast<int>(mainSettings.getCompasStdDev()));
+		odometerStdDevSpinCtrl->SetValue(static_cast<int>(mainSettings.getOdometerStdDev()));
 	}
 	/**
 	 *
@@ -664,7 +803,7 @@ namespace Application
 		{
 			case 0:
 			{
-				robotWorldCanvas->populate( 4);
+				robotWorldCanvas->populateFirstWorld( 4);
 				// TODO Do something...
 //				std::shared_ptr<View::RobotShape> robotShape = std::dynamic_pointer_cast<View::RobotShape>(robotWorldCanvas->getSelectedShape());
 //				if(robotShape)
@@ -679,12 +818,12 @@ namespace Application
 			}
 			case 1:
 			{
-				TRACE_DEVELOP("Please create your own student world 1");
+				robotWorldCanvas->populateSecondWorld( 5);
 				break;
 			}
 			case 2:
 			{
-				TRACE_DEVELOP("Please create your own student world 2");
+				robotWorldCanvas->populateThirdWorld( 6);
 				break;
 			}
 			default:

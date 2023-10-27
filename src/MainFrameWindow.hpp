@@ -87,7 +87,12 @@ namespace Application
 
 			wxPanel* configPanel;
 			wxCheckBox* drawOpenSetCheckbox;
+			wxCheckBox* drawParticleFilterCheckbox;
+			wxCheckBox* drawKalmanFilterCheckbox;
 			wxSpinCtrl* speedSpinCtrl;
+			wxSpinCtrl* lidarStdDevSpinCtrl;
+			wxSpinCtrl* compasStdDevSpinCtrl;
+			wxSpinCtrl* odometerStdDevSpinCtrl;
 			wxRadioBox* worldNumber;
 
 			wxPanel* buttonPanel;
@@ -99,7 +104,14 @@ namespace Application
 			void OnAbout( wxCommandEvent& anEvent);
 
 			void OnDrawOpenSet( wxCommandEvent& anEvent);
+			void OnDrawParticleFilter( wxCommandEvent& anEvent);
+			void OnDrawKalmanFilter( wxCommandEvent& anEvent);
 			void OnSpeedSpinCtrlUpdate( wxCommandEvent& anEvent);
+			void OnLidarStdDevSpinCtrlUpdate( wxCommandEvent& UNUSEDPARAM(anEvent));
+			void OnCompasStdDevSpinCtrlUpdate( wxCommandEvent& UNUSEDPARAM(anEvent));
+			void OnOdometerStdDevSpinCtrlUpdate( wxCommandEvent& UNUSEDPARAM(anEvent));
+			void OnSaveConfiguration( wxCommandEvent& UNUSEDPARAM(anEvent));
+			void OnLoadConfiguration( wxCommandEvent& UNUSEDPARAM(anEvent));
 			void OnWorld1( wxCommandEvent& anEvent);
 			void OnWorld2( wxCommandEvent& anEvent);
 			void OnWorld3( wxCommandEvent& anEvent);

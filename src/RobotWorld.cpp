@@ -276,6 +276,7 @@ namespace Model
 	 */
 	void RobotWorld::populate( int UNUSEDPARAM(aNumberOfWalls))
 	{
+
 		RobotWorld::getRobotWorld().newRobot( "Robot", wxPoint(163,111),false); // @suppress("Avoid magic numbers")
 
 //		static const wxPoint coordinates[] = {
@@ -288,13 +289,59 @@ namespace Model
 //		{
 //			RobotWorld::getRobotWorld().newWall( coordinates[i], coordinates[i + 1],false);
 //		}
-//
-//		RobotWorld::getRobotWorld().newGoal( "Goal", wxPoint(850, 500),false); // @suppress("Avoid magic numbers")
-		
+
+		RobotWorld::getRobotWorld().newGoal( "Goal", wxPoint(850, 500),false); // @suppress("Avoid magic numbers")
+
 		RobotWorld::getRobotWorld().newWall( wxPoint(7,234), wxPoint(419,234) ,false); // @suppress("Avoid magic numbers")
 		RobotWorld::getRobotWorld().newGoal( "Goal", wxPoint(320,285),false); // @suppress("Avoid magic numbers")
-		
 
+		notifyObservers();
+	}
+	/**
+	 *
+	 */
+	void RobotWorld::populateFirstWorld( int UNUSEDPARAM(aNumberOfWalls))
+	{
+
+		RobotWorld::getRobotWorld().newRobot( "Robot", wxPoint(158,443),false); // @suppress("Avoid magic numbers")
+		RobotWorld::getRobotWorld().newWall( wxPoint(131,108),wxPoint(759,158),false); // @suppress("Avoid magic numbers")
+		RobotWorld::getRobotWorld().newWall( wxPoint(746,355),wxPoint(658,760),false); // @suppress("Avoid magic numbers")
+		RobotWorld::getRobotWorld().newWall( wxPoint(108,279),wxPoint(127,671),false); // @suppress("Avoid magic numbers")
+		RobotWorld::getRobotWorld().newWall( wxPoint(60,773),wxPoint(620,962),false); // @suppress("Avoid magic numbers")
+		RobotWorld::getRobotWorld().newGoal( "Goal", wxPoint(842,544),false); // @suppress("Avoid magic numbers")
+
+		notifyObservers();
+	}
+	/**
+	 *
+	 */
+	void RobotWorld::populateSecondWorld( int UNUSEDPARAM(aNumberOfWalls))
+	{
+		RobotWorld::getRobotWorld().newRobot( "Robot", wxPoint(158,443),false); // @suppress("Avoid magic numbers")
+		RobotWorld::getRobotWorld().newWall( wxPoint(131,108),wxPoint(759,158),false); // @suppress("Avoid magic numbers")
+		RobotWorld::getRobotWorld().newWall( wxPoint(516,265),wxPoint(735,656),false); // @suppress("Avoid magic numbers")
+		RobotWorld::getRobotWorld().newWall( wxPoint(108,279),wxPoint(127,671),false); // @suppress("Avoid magic numbers")
+		RobotWorld::getRobotWorld().newWall( wxPoint(60,773),wxPoint(620,962),false); // @suppress("Avoid magic numbers")
+		RobotWorld::getRobotWorld().newWall( wxPoint(394,673),wxPoint(488,676),false); // @suppress("Avoid magic numbers")
+		RobotWorld::getRobotWorld().newWall( wxPoint(730,298),wxPoint(987,429),false); // @suppress("Avoid magic numbers")
+		RobotWorld::getRobotWorld().newWall( wxPoint(990,843),wxPoint(810,913),false); // @suppress("Avoid magic numbers")
+		RobotWorld::getRobotWorld().newGoal( "Goal", wxPoint(842,544),false); // @suppress("Avoid magic numbers")
+
+		notifyObservers();
+	}
+	/**
+	 *
+	 */
+	void RobotWorld::populateThirdWorld( int UNUSEDPARAM(aNumberOfWalls))
+	{
+
+		RobotWorld::getRobotWorld().newRobot( "Robot", wxPoint(155,235),false);
+		RobotWorld::getRobotWorld().newWall( wxPoint(81,108),wxPoint(751,78),false);
+		RobotWorld::getRobotWorld().newWall( wxPoint(947,234),wxPoint(589,709),false);
+		RobotWorld::getRobotWorld().newWall( wxPoint(43,319),wxPoint(520,509),false);
+		RobotWorld::getRobotWorld().newWall( wxPoint(72,776),wxPoint(512,874),false);
+		RobotWorld::getRobotWorld().newGoal( "Goal", wxPoint(812,802),false);
+		
 		notifyObservers();
 	}
 	/**
