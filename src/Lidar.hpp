@@ -1,31 +1,49 @@
-#ifndef LASERDISTANCESENSOR_HPP_
-#define LASERDISTANCESENSOR_HPP_
+/*
+ * Lidar.hpp
+ *
+ *  Created on: Oct 4, 2023
+ *      Author: Damo
+ */
+
+#ifndef LIDAR_HPP_
+#define LIDAR_HPP_
+
 
 #include "Config.hpp"
 
 #include "AbstractSensor.hpp"
-#include "DistancePercept.hpp"
+#include "DistancePercepts.hpp"
+#include "DistanceStimuli.hpp"
+
+#include <math.h>
 
 namespace Model
 {
 	/**
 	 * Compile time configurable length of the laser beam
 	 */
-	const short int laserBeamLength = 2048;
+	const short int lidarLaserBeamLength = 2048;
+
+	const short int lidarBeams = 180;
+
+	const double angleStep = (2 * M_PI / (double)lidarBeams);
 
 	class Robot;
 	typedef std::shared_ptr<Robot> RobotPtr;
 
+	class Particle;
+	typedef std::shared_ptr<Particle> ParticlePtr;
+
 	/**
 	 *
 	 */
-	class LaserDistanceSensor : public AbstractSensor
+	class Lidar : public AbstractSensor
 	{
 		public:
 			/**
 			 *
 			 */
-			explicit LaserDistanceSensor( Robot& aRobot);
+			explicit Lidar( Robot& aRobot);
 			/**
 			 *
 			 */
@@ -37,7 +55,23 @@ namespace Model
 			/**
 			 *
 			 */
-			static void setStdDev(double aStdDev) {LaserDistanceSensor::stddev = aStdDev;}
+			static std::shared_ptr< DistanceStimuli > getStimulus( const wxPoint& origin);
+			/**
+			 *
+			 */
+			static 	void getPerceptFor( const wxPoint& origin, PointCloud& resultPointCloud);
+			/**
+			 *
+			 */
+			static wxPoint getDifferencePoint( const wxPoint& origin);
+			/**
+			 *
+			 */
+			static double getTotalDistance( const wxPoint& origin);
+			/**
+			 *
+			 */
+			static void setStdDev(double aStdDev) {Lidar::stddev = aStdDev;}
 			/**
 			 *
 			 */
@@ -63,4 +97,6 @@ namespace Model
 			static double stddev;
 	};
 } // namespace Model
-#endif /* LASERDISTANCESENSOR_HPP_ */
+
+
+#endif /* LIDAR_HPP_ */

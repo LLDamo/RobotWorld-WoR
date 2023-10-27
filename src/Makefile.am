@@ -5,10 +5,12 @@ robotworld_SOURCES 	= 	AbstractActuator.cpp	\
 						AStar.cpp	\
 						BoundedVector.cpp	\
 						CommunicationService.cpp	\
+						Compas.cpp	\
 						FileTraceFunction.cpp	\
 						Goal.cpp	\
 						GoalShape.cpp	\
 						LaserDistanceSensor.cpp	\
+						Lidar.cpp	\
 						LineShape.cpp	\
 						Logger.cpp	\
 						LogTextCtrl.cpp	\
@@ -17,11 +19,14 @@ robotworld_SOURCES 	= 	AbstractActuator.cpp	\
 						MainFrameWindow.cpp	\
 						MainSettings.cpp	\
 						MathUtils.cpp	\
+						Matrix.inc	\
 						ModelObject.cpp	\
 						NotificationHandler.cpp	\
 						Notifier.cpp	\
 						ObjectId.cpp	\
 						Observer.cpp	\
+						Odometer.cpp	\
+						Particle.cpp	\
 						RectangleShape.cpp	\
 						Robot.cpp	\
 						RobotShape.cpp	\

@@ -167,6 +167,18 @@ namespace View
 			 */
 			void populate( int aNumberOfWalls = 2);
 			/**
+			 * Asks the world to populates itself with a robot, a goal and the given number of walls
+			 */
+			void populateFirstWorld( int aNumberOfWalls = 2);
+			/**
+			 * Asks the world to populates itself with a robot, a goal and the given number of walls
+			 */
+			void populateSecondWorld( int aNumberOfWalls = 2);
+			/**
+			 * Asks the world to populates itself with a robot, a goal and the given number of walls
+			 */
+			void populateThirdWorld( int aNumberOfWalls = 2);
+			/**
 			 * Removes everything from the world
 			 */
 			void unpopulate();

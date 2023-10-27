@@ -130,6 +130,18 @@ namespace Model
 			/**
 			 *
 			 */
+			void populateFirstWorld( int aNumberOfWalls = 2);
+			/**
+			 *
+			 */
+			void populateSecondWorld( int aNumberOfWalls = 2);
+			/**
+			 *
+			 */
+			void populateThirdWorld( int aNumberOfWalls = 2);
+			/**
+			 *
+			 */
 			void unpopulate( bool aNotifyObservers = true);
 			/**
 			 *
