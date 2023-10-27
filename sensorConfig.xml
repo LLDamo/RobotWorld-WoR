@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <Compas stdDev="2.000000"></Compas>
+  <Odometer stdDev="1.000000"></Odometer>
+  <Lidar stdDev="10.000000"></Lidar>
+</root>
